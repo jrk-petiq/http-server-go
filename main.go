@@ -15,9 +15,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.HandlerFunc(fileserverHandler)))
-	mux.HandleFunc("/healthz", healthz)
-	mux.HandleFunc("/metrics", apiCfg.getMetrics)
-	mux.HandleFunc("/reset", apiCfg.resetMetrics)
+	mux.HandleFunc("GET /healthz", healthz)
+	mux.HandleFunc("GET /metrics", apiCfg.getMetrics)
+	mux.HandleFunc("POST /reset", apiCfg.resetMetrics)
 
 	srv := &http.Server{
 		Addr:    ":8080",
