@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
 	"sync/atomic"
 )
 
@@ -15,9 +15,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.HandlerFunc(fileserverHandler)))
-	mux.HandleFunc("GET /healthz", healthz)
-	mux.HandleFunc("GET /metrics", apiCfg.getMetrics)
-	mux.HandleFunc("POST /reset", apiCfg.resetMetrics)
+	mux.HandleFunc("GET /api/healthz", healthz)
+	mux.HandleFunc("GET /admin/metrics", apiCfg.getMetrics)
+	mux.HandleFunc("POST /admin/reset", apiCfg.resetMetrics)
 
 	srv := &http.Server{
 		Addr:    ":8080",
@@ -48,10 +48,19 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 func (cfg *apiConfig) getMetrics(w http.ResponseWriter, r *http.Request) {
-	metricsCount := strconv.Itoa(int(cfg.fileserverHits.Load()))
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	// metricsCount := strconv.Itoa(int(cfg.fileserverHits.Load()))
+	metricsCount := int(cfg.fileserverHits.Load())
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
-	w.Write([]byte("Hits: " + metricsCount))
+	html := fmt.Sprintf(`
+		<html>
+		<body>
+			<h1>Welcome, Chirpy Admin</h1>
+			<p>Chirpy has been visited %d times!</p>
+		</body>
+		</html>
+		`, metricsCount)
+	w.Write([]byte(html))
 }
 
 func (cfg *apiConfig) resetMetrics(w http.ResponseWriter, r *http.Request) {
