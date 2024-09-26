@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync/atomic"
 )
 
@@ -105,8 +106,19 @@ func validateChirp(w http.ResponseWriter, r *http.Request) {
 		w.Write(j)
 		return
 	}
-	validMsg := map[string]string{"valid": "true"}
-	j, err := json.Marshal(validMsg)
+	badWords := []string{"kerfuffle", "sharbert", "fornax"}
+	splitBody := strings.Split(chirp.Body, " ")
+	for i, word := range splitBody {
+		for _, badWord := range badWords {
+			if strings.Contains(strings.ToLower(word), badWord) {
+				splitBody[i] = "****"
+			}
+		}
+	}
+	replacedBody := strings.Join(splitBody, " ")
+
+	cleanedBody := map[string]string{"cleaned_body": replacedBody}
+	j, err := json.Marshal(cleanedBody)
 	if err != nil {
 		log.Printf("Error marshalling valid message: %s", err)
 		w.WriteHeader(500)
